@@ -4,6 +4,7 @@ export * from './router';
 export * from './dict';
 export * from './system';
 export * from './message';
+export * from './babylog';
 export * from './ai';
 export * from './file';
 export * from './monitor';
