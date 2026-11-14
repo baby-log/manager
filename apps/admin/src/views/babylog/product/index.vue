@@ -1,18 +1,31 @@
 <script setup lang="ts">
 defineOptions({ name: 'BabylogProduct' });
 import { computed, reactive, ref } from 'vue';
-import { ElButton, ElMessage, ElMessageBox, ElTableColumn, ElTag } from 'element-plus';
+import {
+  ElButton,
+  ElFormItem,
+  ElMessage,
+  ElMessageBox,
+  ElTableColumn,
+  ElTag,
+  ElUpload,
+} from 'element-plus';
+import type { UploadRequestOptions } from 'element-plus';
 import { YDialog, YForm, YSearchForm, YTable } from '@pivotos/ui';
 import type { YFormOption, YFormSchema, YTableColumn } from '@pivotos/ui';
 import type { ProductEditRequest, ProductQuery, ProductVO } from '@pivotos/types';
 import { formatDate } from '@pivotos/core';
 import { getProduct, removeProduct, updateProduct } from '@/api/babylog/product';
+import { presignDownload, uploadFileWithMeta } from '@/api/file';
 import { useTablePage } from '@/hooks';
 
 /**
  * 内置产品库（M10 契约：/babylog/product，固定 is_builtin=1）。
  * 无新增按钮：内置行（id 1~99）只由服务端 seed（V2.2.8，32 行）产生，
  * 管理端仅查 / 编辑（含上下架）/ 软删；改动经 App 端 base 通道增量下发。
+ * M38：图标字段由手填 file_id 改为内嵌 el-upload 直传 plugin-file（沿用管理端登录态），
+ * 上传成功回填 file_id + 即时预览；替换/移除后旧文件不即时删除，按 M13 孤儿差集
+ * 清理口径回收（引用解除即孤儿，由清理器统一处理）。
  */
 
 // ---------- 列表 ----------
@@ -90,7 +103,6 @@ const formSchemas: YFormSchema[] = [
   },
   { field: 'spec', label: '规格', component: 'input', placeholder: '如 900g/罐，最长 100 字' },
   { field: 'defaultDose', label: '默认剂量', component: 'input', placeholder: '如 30ml/次，最长 100 字' },
-  { field: 'iconPath', label: '图标', component: 'input', placeholder: 'plugin-file 的 file_id（可空）' },
   { field: 'note', label: '备注', component: 'textarea', placeholder: '最长 500 字' },
   {
     field: 'enabled',
@@ -101,10 +113,87 @@ const formSchemas: YFormSchema[] = [
   },
 ];
 
+// ---------- 图标上传（M38：内嵌 el-upload 直传 plugin-file，回填 file_id） ----------
+/** 图标场景限制：plugin-file 扩展名白名单中的图片子集 + ≤500KB */
+const ICON_ACCEPT_EXTS = ['png', 'jpg', 'jpeg', 'webp', 'svg'];
+const ICON_MAX_BYTES = 500 * 1024;
+const ICON_ACCEPT_ATTR = '.png,.jpg,.jpeg,.webp,.svg';
+
+/** file_id → fileUrl 预览缓存（sessionStorage）：编辑回显时换限时可访问 URL */
+const ICON_URL_CACHE_KEY = 'babylog:product-icon-urls';
+
+function readIconUrlCache(): Record<string, string> {
+  try {
+    return JSON.parse(sessionStorage.getItem(ICON_URL_CACHE_KEY) ?? '{}') as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+
+function stashIconUrl(id: string, fileUrl: string): void {
+  const cache = readIconUrlCache();
+  cache[id] = fileUrl;
+  sessionStorage.setItem(ICON_URL_CACHE_KEY, JSON.stringify(cache));
+}
+
+const iconUploading = ref(false);
+const iconPreviewUrl = ref('');
+
+/** 按 file_id 回显预览：缓存命中换预签名 URL；未命中（M38 前手填的旧 file_id）仅提示不可预览 */
+async function refreshIconPreview(fileId?: string): Promise<void> {
+  iconPreviewUrl.value = '';
+  if (!fileId) return;
+  const cached = readIconUrlCache()[fileId];
+  if (!cached) return;
+  try {
+    iconPreviewUrl.value = await presignDownload(cached);
+  } catch {
+    iconPreviewUrl.value = '';
+  }
+}
+
+function validateIconFile(file: File): boolean {
+  const ext = file.name.includes('.') ? (file.name.split('.').pop() ?? '').toLowerCase() : '';
+  if (!ICON_ACCEPT_EXTS.includes(ext)) {
+    ElMessage.error(`不支持的图标类型${ext ? ` .${ext}` : ''}，仅支持 png / jpg / webp / svg`);
+    return false;
+  }
+  if (file.size > ICON_MAX_BYTES) {
+    ElMessage.error(`图标大小不能超过 500KB（当前 ${(file.size / 1024).toFixed(0)}KB）`);
+    return false;
+  }
+  return true;
+}
+
+async function handleIconUpload(options: UploadRequestOptions): Promise<void> {
+  const file = options.file;
+  if (!validateIconFile(file)) return;
+  iconUploading.value = true;
+  try {
+    const { id, fileUrl } = await uploadFileWithMeta(file);
+    // 替换图标：旧 file_id 引用解除后不即时删除，进 M13 孤儿差集清理口径
+    formModel.iconPath = id;
+    stashIconUrl(id, fileUrl);
+    await refreshIconPreview(id);
+    ElMessage.success('图标已上传，file_id 已自动回填');
+  } catch (err) {
+    ElMessage.error(`图标上传失败：${err instanceof Error ? err.message : '未知错误'}`);
+  } finally {
+    iconUploading.value = false;
+  }
+}
+
+/** 移除图标：仅解除引用（formModel.iconPath 清空），旧文件同走孤儿清理口径 */
+function handleIconClear(): void {
+  formModel.iconPath = undefined;
+  iconPreviewUrl.value = '';
+}
+
 async function openEdit(row: ProductVO): Promise<void> {
   const detail = await getProduct(row.id);
   Object.keys(formModel).forEach((k) => delete formModel[k]);
   Object.assign(formModel, { ...detail });
+  await refreshIconPreview(detail.iconPath);
   dialogVisible.value = true;
 }
 
@@ -195,7 +284,31 @@ async function handleDelete(row: ProductVO): Promise<void> {
       :confirm-loading="confirmLoading"
       @confirm="handleSubmit"
     >
-      <YForm ref="formRef" v-model="formModel" :schemas="formSchemas" label-width="90px" />
+      <YForm ref="formRef" v-model="formModel" :schemas="formSchemas" label-width="90px">
+        <ElFormItem label="图标">
+          <div class="icon-upload">
+            <img v-if="iconPreviewUrl" :src="iconPreviewUrl" class="icon-upload__thumb" alt="产品图标预览" />
+            <div v-else-if="formModel.iconPath" class="icon-upload__placeholder">
+              已设置 file_id={{ formModel.iconPath }}（非本会话上传，无法预览）
+            </div>
+            <div v-else class="icon-upload__placeholder">未设置图标</div>
+            <ElUpload
+              :show-file-list="false"
+              :accept="ICON_ACCEPT_ATTR"
+              :http-request="handleIconUpload"
+            >
+              <ElButton :loading="iconUploading">
+                {{ formModel.iconPath ? '更换图标' : '上传图标' }}
+              </ElButton>
+            </ElUpload>
+            <ElButton v-if="formModel.iconPath" link type="danger" @click="handleIconClear">移除</ElButton>
+          </div>
+          <div class="icon-upload__tip">
+            支持 png / jpg / webp / svg，≤500KB；上传后自动回填 file_id 并即时预览；
+            更换或移除后旧文件不即时删除，按孤儿清理口径统一回收。
+          </div>
+        </ElFormItem>
+      </YForm>
     </YDialog>
   </div>
 </template>
@@ -204,6 +317,34 @@ async function handleDelete(row: ProductVO): Promise<void> {
 .product-page__tip {
   margin-bottom: 12px;
   font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.icon-upload {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.icon-upload__thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border: 1px solid var(--el-border-color);
+  border-radius: 6px;
+  background: var(--el-fill-color-light);
+}
+
+.icon-upload__placeholder {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.icon-upload__tip {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
   color: var(--el-text-color-secondary);
 }
 </style>
