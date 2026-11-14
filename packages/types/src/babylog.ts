@@ -148,3 +148,52 @@ export interface FeedbackQuery extends PageQuery {
 export interface FeedbackReplyRequest {
   reply: string;
 }
+
+/* ================= 记录类型规则（/babylog/record-type-rule，M41） ================= */
+
+/**
+ * 记录类型云端规则行（对齐 RecordTypeRuleVO）。
+ * 边界：只能调已有类型的参数，无新增端点（防膨胀成动态表单引擎）。
+ * enabled/startAgeDays/endAgeDays 为 null = 「该项不覆盖，回落客户端代码默认」。
+ */
+export interface RecordTypeRuleVO {
+  id: string;
+  /** 记录类型标识（与 App 端 RecordType 枚举 name 逐字一致） */
+  recordType: string;
+  /** 分类：FEEDING 喂养 / CARE 护理 / HEALTH 健康 / MEDICAL 医疗 */
+  category: string;
+  /** 默认开关：null=回落代码默认，0=默认关，1=默认开 */
+  enabled?: number | null;
+  /** 起始月龄（天）：null=回落代码默认 */
+  startAgeDays?: number | null;
+  /** 截止月龄（天）：null=回落代码默认 */
+  endAgeDays?: number | null;
+  /** 记录页类内排序（小的在前） */
+  sortOrder?: number;
+  /** 类内分组键：null/空=默认不分组 */
+  groupKey?: string | null;
+  /** 显示文案：null/空=回落代码默认文案 */
+  displayLabel?: string | null;
+}
+
+/** 规则分页查询（对齐 RecordTypeRulePageQuery） */
+export interface RecordTypeRuleQuery extends PageQuery {
+  category?: string;
+  recordType?: string;
+}
+
+/** 规则编辑请求（对齐 RecordTypeRuleEditCmd；recordType 走路径不可改） */
+export interface RecordTypeRuleEditRequest {
+  /** 默认开关：null=回落代码默认，0=默认关，1=默认开 */
+  enabled?: number | null;
+  /** 起始月龄（天）：null=回落代码默认 */
+  startAgeDays?: number | null;
+  /** 截止月龄（天）：null=回落代码默认 */
+  endAgeDays?: number | null;
+  /** 记录页类内排序（小的在前） */
+  sortOrder?: number;
+  /** 类内分组键：null/空=默认不分组 */
+  groupKey?: string | null;
+  /** 显示文案：null/空=回落代码默认文案 */
+  displayLabel?: string | null;
+}
