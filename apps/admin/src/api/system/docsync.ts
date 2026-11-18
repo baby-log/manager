@@ -1,3 +1,4 @@
+import { apiBase } from '../base';
 import { request } from '../request';
 
 // ==================== 类型定义 ====================
@@ -147,5 +148,5 @@ export function syncDocSyncAll(): Promise<SyncResultDTO[]> {
 
 /** 导出 OpenAPI JSON（返回下载 URL） */
 export function exportDocSyncOpenApiUrl(id: string): string {
-  return `/api/system/docsync/${id}/export`;
+  return `${apiBase}/system/docsync/${id}/export`;
 }
