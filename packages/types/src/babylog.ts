@@ -197,3 +197,180 @@ export interface RecordTypeRuleEditRequest {
   /** 显示文案：null/空=回落代码默认文案 */
   displayLabel?: string | null;
 }
+
+/* ================= 后台只读总览（/babylog/admin，M53） ================= */
+
+/**
+ * BabyLog 后台管理端「所有人 / 家庭 / 宝宝 / 全部记录」只读查询契约（M53）。
+ * 统一前缀 /babylog/admin，与既有 5 个 babylog 管理页同一套 sys-admin 鉴权。
+ *
+ * 口径：全部只读（无编辑 / 删除 / 导出）；跨用户、涉及婴儿健康敏感数据，查看操作留审计。
+ * 数值口径：后端 Long 全局序列化为 String、Integer 保持 number，故计数 / id 一律
+ * 用 `AdminScalar` 承接，展示时只做字符串化，绝不做数值运算（防 NaN）。
+ */
+
+/** 计数 / 状态等可能为 Long(String) 或 Integer(number) 的标量 */
+export type AdminScalar = string | number;
+
+/** 总览 7 项计数（对齐 /babylog/admin/overview，非分页） */
+export interface AdminOverviewVO {
+  /** 注册用户数 */
+  userCount: AdminScalar;
+  /** 家庭数 */
+  familyCount: AdminScalar;
+  /** 宝宝数 */
+  childCount: AdminScalar;
+  /** 喂养记录数 */
+  feedingCount: AdminScalar;
+  /** 疫苗接种记录数 */
+  vaccinationCount: AdminScalar;
+  /** 提醒数 */
+  reminderCount: AdminScalar;
+  /** 今日新增记录数 */
+  todayRecordCount: AdminScalar;
+}
+
+/** 用户行（/babylog/admin/user/page） */
+export interface AdminUserVO {
+  userId: string;
+  username: string;
+  nickname?: string;
+  email?: string;
+  /** 账号状态：0 正常 1 停用（枚举未定死，未知值原样展示） */
+  status?: AdminScalar;
+  createTime?: string;
+  childCount?: AdminScalar;
+  deviceCount?: AdminScalar;
+}
+
+/** 用户分页查询 */
+export interface AdminUserQuery extends PageQuery {
+  /** 用户名 / 昵称 / 邮箱模糊 */
+  keyword?: string;
+}
+
+/** 家庭行（/babylog/admin/family/page） */
+export interface AdminFamilyVO {
+  familyId: string;
+  familyName: string;
+  ownerUserId?: string;
+  ownerName?: string;
+  memberCount?: AdminScalar;
+  childCount?: AdminScalar;
+  createTime?: string;
+}
+
+/** 家庭分页查询 */
+export interface AdminFamilyQuery extends PageQuery {
+  /** 家庭名 / 户主模糊 */
+  keyword?: string;
+}
+
+/** 宝宝行（/babylog/admin/child/page） */
+export interface AdminChildVO {
+  id: string;
+  name: string;
+  /** 性别：MALE / FEMALE / UNKNOWN 或数字枚举，未知值原样展示 */
+  gender?: AdminScalar;
+  birthday?: string;
+  isPremature?: AdminScalar | boolean;
+  archived?: AdminScalar | boolean;
+  ownerUserId?: string;
+  familyId?: string;
+  createdAt?: string;
+}
+
+/** 宝宝分页查询 */
+export interface AdminChildQuery extends PageQuery {
+  userId?: string;
+  familyId?: string;
+  /** 宝宝姓名模糊 */
+  keyword?: string;
+}
+
+/**
+ * 记录明细表名白名单（/babylog/admin/record/page 的 table 参数，服务端据此限流防注入）。
+ * 前端下拉直接用这份做 value，顺序与服务端约定一致。
+ */
+export const ADMIN_RECORD_TABLES = [
+  'feedings',
+  'diapers',
+  'sleeps',
+  'baths',
+  'spits',
+  'pump_sessions',
+  'measurements',
+  'medications',
+  'vaccinations',
+  'follow_ups',
+  'visits',
+] as const;
+
+/** 记录明细表名 */
+export type AdminRecordTable = (typeof ADMIN_RECORD_TABLES)[number];
+
+/** 记录明细分行（跨表归一；summary 是服务端拼好的中文摘要，前端不二次加工） */
+export interface AdminRecordVO {
+  id: string;
+  /** 归属表名（ADMIN_RECORD_TABLES 之一） */
+  table: string;
+  childId?: string;
+  userId?: string;
+  /** 记录子类型 */
+  type?: string;
+  /** 服务端拼好的中文摘要 */
+  summary?: string;
+  startedAt?: string;
+  createdAt?: string;
+  /** 逻辑删除标记：0/1 或 boolean */
+  deleted?: AdminScalar | boolean;
+}
+
+/** 记录明细分页查询 */
+export interface AdminRecordQuery extends PageQuery {
+  /** 表名白名单值，'' = 全部表 */
+  table?: AdminRecordTable | '';
+  userId?: string;
+  familyId?: string;
+  childId?: string;
+  /** 起始日期 YYYY-MM-DD */
+  from?: string;
+  /** 截止日期 YYYY-MM-DD */
+  to?: string;
+}
+
+/** 疫苗行（/babylog/admin/vaccination/page） */
+export interface AdminVaccinationVO {
+  id: string;
+  childId?: string;
+  childName?: string;
+  vaccineName?: string;
+  doseNo?: AdminScalar;
+  scheduledAt?: string;
+  doneAt?: string;
+  status?: AdminScalar;
+}
+
+/** 疫苗分页查询 */
+export interface AdminVaccinationQuery extends PageQuery {
+  userId?: string;
+  childId?: string;
+  status?: string;
+}
+
+/** 提醒行（/babylog/admin/reminder/page） */
+export interface AdminReminderVO {
+  id: string;
+  childId?: string;
+  childName?: string;
+  kind?: string;
+  title?: string;
+  dueAt?: string;
+  level?: AdminScalar;
+}
+
+/** 提醒分页查询 */
+export interface AdminReminderQuery extends PageQuery {
+  userId?: string;
+  childId?: string;
+}
