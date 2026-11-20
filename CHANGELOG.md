@@ -4,9 +4,27 @@
 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 本仓是上游 `pivotos-ui` 的 fork，未全量改名；框架侧变更沿用上游，本文件只记 BabyLog 增量与收官状态。
 
-## [Unreleased] — V2 收官（2026-11-19，未部署公开域名）
+## [2.4.0] — V2 固定版（2026-11-19，未部署公开域名）
 
+> **版本号固定**：六端产品版本统一为 `V2.4.0`；npm 包版本 `3.2.0` 是上游框架版本，不改。
+> 生产包 `babylog-admin-ui-2.4.0.tar.gz` 由 `VITE_API_URL=https://baby-api.293242.com pnpm build` 生成
+> （注意：vite 清空 `dist` 可能被沙箱批量删除守卫拦，需先移走旧 dist 再 build；判成功必须看 build 退出码）。
 > 管理端生产域名部署与 V3 公开处理均未解冻；dev 联调固定本机隔离 dev 服 `18080`。
+
+### 修复（M53 · 验收问题修复批，仍归 V2.4.0）
+
+- **后台能看全部数据**（用户验收问题 4）：新增 5 个只读页面
+  `adminOverview / adminUser / adminFamily / adminChild / adminRecord`，
+  配套 `api/babylog/adminConsole.ts`（7 个 GET）与 `packages/types/src/babylog.ts` 类型。
+  覆盖账号、家庭、宝宝、记录明细（11 张表白名单）、疫苗、提醒、运营概览；
+  记录明细页用标签页承载疫苗与提醒子表。
+- 全部页面只读，无编辑/删除/导出按钮（婴儿健康数据属敏感个人信息）；
+  概览页写明「只读·跨用户·敏感数据·操作留审计」。
+- 菜单由 server `V2.2.15__babylog_admin_console.sql` 注册（5060~5064），
+  component 字符串与目录名逐字一致，路由仍由后端 `/system/menu/routers` 下发后 `addRoute`。
+- 验证：`pnpm -C apps/admin build` → `vue-tsc --noEmit` 零报错、`vite v7.3.6`
+  `✓ 3135 modules transformed`、`✓ built in 10.31s`、退出码 0；先把旧 `dist` 移出再构建
+  （避开清空 dist 的批量删除守卫）。dist 反查 5 个页面文案各命中 1 个 chunk。
 
 ### 变更（BabyLog 管理端增量）
 

@@ -6,10 +6,11 @@
 >
 > 📖 在线文档：[pivotos-doc.293242.com](https://pivotos-doc.293242.com) ｜ 🖥️ 在线演示：[pivotos-pc.293242.com](https://pivotos-pc.293242.com)（账号 `admin / admin123`）
 
-## 当前状态（V2 收官，2026-11-19）
+## 当前状态（V2 固定版 V2.4.0，2026-11-19）
 
 | 项 | 结果 |
 |---|---|
+| 版本 | **产品版本 `V2.4.0`**；`package.json` 的 `3.2.0` 是 PivotOS 框架版本，双轨保留不改 |
 | 业务范围 | BabyLog 管理端增量：内置产品、记录类型规则、设备管理、版本管理、意见反馈；框架侧系统管理 / 消息 / 工作流 / AI 等能力沿用上游 |
 | 类型门禁 | `pnpm typecheck`（`vue-tsc --noEmit`）**EXIT=0 零报错** |
 | dev 联调 | `VITE_API_BASE_URL=http://127.0.0.1:18080 pnpm dev`；超管 `admin / admin123` |
