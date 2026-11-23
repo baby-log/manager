@@ -66,7 +66,9 @@ const columns: YTableColumn<ProductVO>[] = [
   { prop: 'name', label: '品名', minWidth: 150 },
   { prop: 'spec', label: '规格', minWidth: 110 },
   { prop: 'defaultDose', label: '默认剂量', minWidth: 100 },
+  { prop: 'sortOrder', label: '排序', width: 76, align: 'center' },
   { prop: 'enabled', label: '状态', width: 80, align: 'center', slot: 'enabled' },
+  { prop: 'defaultCount', label: '默认数', width: 80, align: 'center' },
   { prop: 'version', label: '同步版本', width: 90, align: 'center' },
   { prop: 'serverUpdatedAt', label: '最后维护', width: 170, slot: 'serverUpdatedAt' },
 ];
@@ -103,6 +105,13 @@ const formSchemas: YFormSchema[] = [
   },
   { field: 'spec', label: '规格', component: 'input', placeholder: '如 900g/罐，最长 100 字' },
   { field: 'defaultDose', label: '默认剂量', component: 'input', placeholder: '如 30ml/次，最长 100 字' },
+  {
+    field: 'sortOrder',
+    label: '排序',
+    component: 'number',
+    props: { min: 0, max: 999999, step: 10 },
+    placeholder: '数字越大越靠前（0~999999）',
+  },
   { field: 'note', label: '备注', component: 'textarea', placeholder: '最长 500 字' },
   {
     field: 'enabled',
@@ -208,6 +217,8 @@ async function handleSubmit(): Promise<void> {
       name: formModel.name as string,
       spec: (formModel.spec as string) || undefined,
       defaultDose: (formModel.defaultDose as string) || undefined,
+      // 服务端 @NotNull：清空后按 0 提交，否则整单校验被拒（M67）
+      sortOrder: formModel.sortOrder == null || formModel.sortOrder === '' ? 0 : Number(formModel.sortOrder),
       note: (formModel.note as string) || undefined,
       iconPath: (formModel.iconPath as string) || undefined,
       enabled: formModel.enabled as number,
@@ -238,6 +249,7 @@ async function handleDelete(row: ProductVO): Promise<void> {
   <div class="page-card">
     <div class="product-page__tip">
       内置产品库只维护服务端预置行（id 1~99），不提供新增；编辑与上下架改动会经 App 端基础数据通道增量下发。
+      排序数字越大越靠前（四端选择列表同口径）；「默认数」是各家庭设为本类默认的偏好行聚合数，跨账号只读。
     </div>
 
     <YSearchForm v-model="params" :schemas="searchSchemas" @search="search" @reset="reset" />

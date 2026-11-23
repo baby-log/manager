@@ -19,6 +19,10 @@ export interface ProductVO {
   name: string;
   spec?: string;
   defaultDose?: string;
+  /** 展示排序：数字越大越靠前（M67，产品级共享，后台可维护含内置行） */
+  sortOrder?: number;
+  /** 被设为默认产品的偏好行数（M67，跨账号聚合只读；Long → string） */
+  defaultCount?: string;
   note?: string;
   /** 图标（plugin-file 的 file_id） */
   iconPath?: string;
@@ -50,6 +54,8 @@ export interface ProductEditRequest {
   name: string;
   spec?: string;
   defaultDose?: string;
+  /** 展示排序：数字越大越靠前（M67，必填；服务端 @NotNull，缺省会被校验拒） */
+  sortOrder: number;
   note?: string;
   iconPath?: string;
   /** 上架开关：1 在售 0 下架 */
