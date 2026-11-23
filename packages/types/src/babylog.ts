@@ -8,6 +8,41 @@ import type { Emptyable, PageQuery } from './common';
  * 枚举一律存 name 字符串（FORMULA / PENDING …），绝不存序号。
  */
 
+/* ================= 媒体容量配额（/app/babylog/media/quota + /babylog/media/quota，K3/M70） ================= */
+
+/**
+ * 宝宝媒体容量配额（对齐 K2/M69 `MediaQuotaVO`）。
+ *
+ * 服务端全局 Long → String：id / childId / 各 bytes 一律按 string 解析，
+ * 绝不做 Number 运算（雪花 id 与 1 GiB 级字节数都可能超 2^53 或展示精度敏感）。
+ * `adjustedBytes` 为 null = 该行尚未被后台调整过（全局 NON_NULL → 缺键），前端必须容忍缺键。
+ *
+ * 边界：K3 只跑 E6 就医附件语义、V3 前零画面数据；配额页只读写容量，不碰媒体文件本身。
+ */
+export interface MediaQuotaVO {
+  id?: string;
+  childId: string;
+  /** 初始容量（默认 1 GiB，服务端 `babylog.media.default-quota-bytes`） */
+  initialBytes: string;
+  /** 后台调整值：未调整过时缺键 → 前端按 undefined 处理 */
+  adjustedBytes?: string;
+  /** 生效容量（initial + adjusted 的服务端口径） */
+  effectiveBytes: string;
+  /** 已用（由 bl_media_file 聚合，非冗余列） */
+  usedBytes: string;
+  /** 剩余 */
+  remainingBytes: string;
+}
+
+/** 后台动态调整容量（对齐 `MediaQuotaAdjustCmd`；Long 全字符串上送）。 */
+export interface MediaQuotaAdjustRequest {
+  childId: string;
+  /** 仅「行尚不存在」时用于建行；已存在行服务端保留原 user_id */
+  ownerUserId: string;
+  /** >= 0，否则 8425；单位字节，字符串上送 */
+  adjustedBytes: string;
+}
+
 /* ================= 内置产品库（/babylog/product） ================= */
 
 /** 内置产品行（对齐 ProductVO；本页固定 is_builtin=1，id 落 1~99 预留段） */

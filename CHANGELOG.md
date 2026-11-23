@@ -71,3 +71,14 @@ GitHub 22 端口偶发不通时改用 `ssh://git@ssh.github.com:443/<org>/<repo>
 新增页面 / 业务模块或 packages 包时，同步更新本文件、[README.md](README.md) 的
 「Monorepo 结构」「功能模块」两节及在线文档对应章节。本仓不设 `PROGRESS.md` / `ACCEPTANCE.md`，
 逐批次进度统一以 [19-V2收口执行档案](../独立产品规划/19-V2收口执行档案-2026-11-18.md) 为准。
+
+> 订正（K0 起，只读提示不回改上一行）：按 `独立产品规划/23` §五 K0 要求，本仓已补建 [PROGRESS.md](PROGRESS.md)（`??` 未跟踪、K0 授权文档改动），逐批次进度以该文件为准；上面「本仓不设 PROGRESS.md」是建表前的历史口径。
+
+## K3 · M70 媒体存储底座 · 接入侧（2026-11-24，工作区未提交 · 未纳入版本段落）
+
+> 本批是 `develop` 上**未提交未部署**的开发批次（M 号 M70），不新开版本号段落、不回改 `[2.4.0]` 及以上历史。逐条交付与验证见 [PROGRESS.md](PROGRESS.md) 尾章「K3 · M70」。
+
+- **配额页**：新增 `apps/admin/src/views/babylog/mediaQuota/index.vue`（初始容量展示 + 动态调整）、`apps/admin/src/api/babylog/media.ts`、`packages/types/src/babylog.ts` 追加 `MediaQuotaVO` / `MediaQuotaAdjustRequest`（Long 全按 string）。读 `GET /app/babylog/media/quota?childId=`、写 `PUT /babylog/media/quota`（`childId` + `ownerUserId` + `adjustedBytes`）。
+- **菜单权限字符登记（K2→K3 移交点）**：页面挂 `babylog:media:list` / `babylog:media:adjust`；动态路由 component 串须为 `babylog/mediaQuota/index`。**server 侧三处配套（菜单 SQL 行 / `AdminMediaController` 方法级 `@SaCheckPermission` / `AdminControllerPermissionContractTest` 纳入新 controller）不在本节点改**（K3 只改五仓），如实移交后续服务端节点。
+- **验证**：`typecheck` 通过、`build ✓ built in 9.06s`、生产产物命中配额页；`dist/` 被 gitignore 忽略。
+- **未做**：dev 18080 联调（无库环境）、server 侧权限字符回填、commit / push。待龙哥综合验收。
