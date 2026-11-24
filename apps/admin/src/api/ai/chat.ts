@@ -1,4 +1,5 @@
 import { getToken } from '@pivotos/core';
+import { apiBase } from '../base';
 import type {
   AiChatMessageVO,
   AiChatSendBody,
@@ -60,7 +61,7 @@ export async function streamChat(
 ): Promise<void> {
   let response: Response;
   try {
-    response = await fetch('/api/ai/chat/stream', {
+    response = await fetch(`${apiBase}/ai/chat/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

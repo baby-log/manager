@@ -1,6 +1,7 @@
 import type { PageResult, ResetPasswordBody, UserQuery, UserSaveRequest, UserVO } from '@pivotos/types';
 import { getToken } from '@pivotos/core';
 import type { ImportStreamCallbacks } from '@pivotos/components';
+import { apiBase } from '../base';
 import { request } from '../request';
 
 /** 剔除空值查询参数（'' 与 undefined/null 不传给后端） */
@@ -69,7 +70,7 @@ export async function importUsersStream(
   const fd = new FormData();
   fd.append('file', file);
 
-  const response = await fetch('/api/system/user/import/stream', {
+  const response = await fetch(`${apiBase}/system/user/import/stream`, {
     method: 'POST',
     headers: {
       // Sa-Token token-name=Authorization，未配置 token-prefix，发裸值

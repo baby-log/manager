@@ -1,4 +1,5 @@
 import { getToken } from '@pivotos/core';
+import { apiBase } from '../base';
 import type {
   ApprovalAdviceBody,
   ApprovalAdviceStreamDone,
@@ -43,7 +44,7 @@ export async function streamApprovalAdvice(
 ): Promise<void> {
   let response: Response;
   try {
-    response = await fetch('/api/ai/approval/advice/stream', {
+    response = await fetch(`${apiBase}/ai/approval/advice/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,4 +1,5 @@
 import { getToken } from '@pivotos/core';
+import { apiBase } from '../base';
 import { request } from '../request';
 
 // ==================== 类型定义 ====================
@@ -242,7 +243,7 @@ export async function subscribeMigrationProgress(
 ): Promise<void> {
   let response: Response;
   try {
-    response = await fetch(`/api/migration/task/progress?taskId=${taskId}`, {
+    response = await fetch(`${apiBase}/migration/task/progress?taskId=${taskId}`, {
       method: 'POST',
       headers: {
         Accept: 'text/event-stream',

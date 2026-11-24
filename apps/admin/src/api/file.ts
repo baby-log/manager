@@ -32,10 +32,11 @@ export function deleteFile(id: string): Promise<void> {
 }
 
 /**
- * 预签名直传执行器：presign → PUT 直传 → register 登记，返回可访问 fileUrl。
- * 供 FileUpload 组件 upload prop 或页面上传按钮直接使用。
+ * 预签名直传执行器：presign → PUT 直传 → register 登记。
+ * 返回 { id: sys_file 主键（file_id，Long 全局序列化为 String）, fileUrl }，
+ * 供需要把 file_id 落库的业务（如 babylog 产品图标 iconPath）使用。
  */
-export async function uploadFile(file: File): Promise<string> {
+export async function uploadFileWithMeta(file: File): Promise<{ id: string; fileUrl: string }> {
   const sign = await presign(file.name);
   const resp = await fetch(sign.uploadUrl, {
     method: 'PUT',
@@ -45,11 +46,20 @@ export async function uploadFile(file: File): Promise<string> {
   if (!resp.ok) {
     throw new Error(`上传失败(${resp.status})`);
   }
-  await registerFile({
+  const id = await registerFile({
     objectKey: sign.objectKey,
     originalName: file.name,
     fileSize: file.size,
     contentType: file.type || undefined,
   });
-  return sign.fileUrl;
+  return { id, fileUrl: sign.fileUrl };
+}
+
+/**
+ * 预签名直传执行器：presign → PUT 直传 → register 登记，返回可访问 fileUrl。
+ * 供 FileUpload 组件 upload prop 或页面上传按钮直接使用。
+ */
+export async function uploadFile(file: File): Promise<string> {
+  const { fileUrl } = await uploadFileWithMeta(file);
+  return fileUrl;
 }
