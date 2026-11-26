@@ -93,3 +93,7 @@ GitHub 22 端口偶发不通时改用 `ssh://git@ssh.github.com:443/<org>/<repo>
 - **验证**：`typecheck` 通过、`build` 通过；dev 18080 联调未跑（无库环境，如实登记）。
 - **未做**：dev 18080 联调、server 侧权限字符回填、commit / push。待龙哥综合验收。
 
+### K7 / M78 · 隐私政策改版（ui 零改动 · 2026-11-25）
+
+- 管理端无隐私页；按门禁 C 重建生产包（正式域名 `.env.production`），域名反扫 正式 1 / 测试 0 / dev 0。未 commit / push。
+

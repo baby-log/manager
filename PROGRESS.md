@@ -35,3 +35,9 @@
 - **验证**：`pnpm -C ui run typecheck` **通过**、`pnpm -C ui run build` **通过**（生产产物含 FAQ 页）；dev 18080 联调**未跑**（本机 18080/3306 无监听，如实登记、不伪造）。
 - **边界**：未做 dev 18080 联调、server 侧菜单权限三处配套回填；**未 commit / 未 push**，报告后即停待龙哥综合验收。
 
+### K7 / M78 · 隐私政策改版（ui 源码零改动 · 2026-11-25）
+
+- 管理端无隐私政策页面；按门禁 C 从干净 worktree 重建生产包（补 `.env.production` 的 `VITE_API_URL=https://baby-api.293242.com`，构建期本地文件不落仓）：`UI_EXIT=0`、`✓ built in 30.29s`。
+- dist 221 文件、域名反扫：正式 1 / 测试 0 / dev 0。产物 `发布包/K7-M78-隐私政策改版/ui/babylog-admin-ui-2.5.1-K7-M78.tar.gz`。
+- **未 commit / 未 push**；部署归龙哥。
+
