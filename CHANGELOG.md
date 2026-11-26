@@ -97,3 +97,7 @@ GitHub 22 端口偶发不通时改用 `ssh://git@ssh.github.com:443/<org>/<repo>
 
 - 管理端无隐私页；按门禁 C 重建生产包（正式域名 `.env.production`），域名反扫 正式 1 / 测试 0 / dev 0。未 commit / push。
 
+### K8 / M79 · 画面云同步开关解锁（ui 源码零改动 · 2026-11-25）
+
+- 管理端无端侧云同步 / 画面上传开关载体（`apps/admin/src/api/babylog/media.ts` 是 K3 既有配额能力），按「不越权新增页面」原则零代码改动、仅文档留痕；K8 未新增管理端端点 / 菜单 / 权限字符。
+- ui `dist` 生产包未重建（六端 release 产物同口径，见 `发布包/K8-M79-画面云同步开关解锁/BUILD-LOG.md` §四待拍板）。**未 commit / 未 push**；零对外动作、不自行验收、不生成 K9 提示词。
