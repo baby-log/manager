@@ -22,3 +22,16 @@
 
 ### 边界
 - 未做：dev 18080 联调（本机 18080/3306 无监听）、菜单 SQL / 注解 / 契约测试回填（server 侧，见上）、真机点按。**未 commit / 未 push**，报告后即停待龙哥综合验收。
+
+## K6-S · M76 育儿知识库 · 管理端 FAQ 维护（2026-11-25，工作区未提交）
+
+- **节点 / 范围**：K6-S（服务端 KB/RAG 底座节点；ui 侧只做管理端 FAQ 维护页），M 号 **M76**（写前 grep 六仓 PROGRESS `M76` 占用 0、全局上限 M75）。只改 ui 仓；基线 HEAD `7fb174e`（本会话实测）。
+- **交付**：新增 `apps/admin/src/views/babylog/kbFaq/index.vue`（分类 / 关键词筛选、列表、新增编辑、删除、来源必填、正文 2000 字上限、顶部固定免责）+ `apps/admin/src/api/babylog/kb.ts`（`listKbFaq` / `saveKbFaq` / `deleteKbFaq` + 本地 `KbFaqVO` / `KbFaqSaveCmd` 类型）。**不改 `packages/types`**，增量只落 `views/babylog/` 与 `api/babylog/`。
+- **端点**（逐字对齐 `server/babylog-plugins/babylog-plugin-biz/docs/kb-endpoints-M76.md`）：`GET /babylog/kb/faq/list`、`POST /babylog/kb/faq/save`、`DELETE /babylog/kb/faq/{id}`；类级 `@SaCheckLogin(type=StpSysUtil.TYPE)`，沿用管理端登录态。不硬编码 `/api` 或域名（沿用 `request` 实例 `apiBase`）；Element Plus 组件全部显式 import。
+- **全局契约**：所有 Long（id）字符串；`enabled` / `favorited` 整数 1/0 绝不发 true/false；null 键缺省、VO 字段全可选；`source` 必填（服务端 `8465`）。
+- **红线（`10` §4.1）**：页面顶部常驻固定免责「仅供参考，不构成医疗建议，异常请及时就医」（与服务端问答响应同一句）；来源必填 + 正文限 2000 字禁整篇搬运；禁用词 0 处用于 UI。
+- **动态路由**：后端菜单 component 串必须逐字为 **`babylog/kbFaq/index`**（`permission.ts` 用 `import.meta.glob` 装配），本页不改前端路由表。菜单行 / 方法级 `@SaCheckPermission` / `AdminControllerPermissionContractTest` 三处配套按 K3 先例登记到「遗留与移交」，本页**不使用 `v-hasPermi`**（靠菜单可见性控制访问）。
+- **额度参数**：`KB_QA` 免费次数不在本页维护，走「系统工具 - 参数设置」的 `babylog.ai.quota.kb_qa.limit`（`sys_config`），改完实时生效。V3 购买引导 / 虚拟支付 / 线下购买**移交主会话**，本页零相关代码。
+- **验证**：`pnpm -C ui run typecheck` **通过**、`pnpm -C ui run build` **通过**（生产产物含 FAQ 页）；dev 18080 联调**未跑**（本机 18080/3306 无监听，如实登记、不伪造）。
+- **边界**：未做 dev 18080 联调、server 侧菜单权限三处配套回填；**未 commit / 未 push**，报告后即停待龙哥综合验收。
+

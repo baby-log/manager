@@ -82,3 +82,14 @@ GitHub 22 端口偶发不通时改用 `ssh://git@ssh.github.com:443/<org>/<repo>
 - **菜单权限字符登记（K2→K3 移交点）**：页面挂 `babylog:media:list` / `babylog:media:adjust`；动态路由 component 串须为 `babylog/mediaQuota/index`。**server 侧三处配套（菜单 SQL 行 / `AdminMediaController` 方法级 `@SaCheckPermission` / `AdminControllerPermissionContractTest` 纳入新 controller）不在本节点改**（K3 只改五仓），如实移交后续服务端节点。
 - **验证**：`typecheck` 通过、`build ✓ built in 9.06s`、生产产物命中配额页；`dist/` 被 gitignore 忽略。
 - **未做**：dev 18080 联调（无库环境）、server 侧权限字符回填、commit / push。待龙哥综合验收。
+
+## K6-S · M76 育儿知识库 · 管理端 FAQ 维护（2026-11-25，工作区未提交 · 未纳入版本段落）
+
+> `develop` 上**未提交未部署**的开发批次（M 号 M76），不新开版本号段落、不回改 `[2.4.0]` 及以上历史、不回改 M70 章节。逐条交付与验证见 [PROGRESS.md](PROGRESS.md) 尾章「K6-S · M76」。
+
+- **FAQ 页**：新增 `apps/admin/src/views/babylog/kbFaq/index.vue`（分类 / 关键词筛选、列表、新增编辑、删除、来源必填、正文 2000 字上限、顶部固定免责）、`apps/admin/src/api/babylog/kb.ts`（3 端点 + 本地 VO/Cmd 类型，不改 `packages/types`）。端点 `GET /babylog/kb/faq/list`、`POST /babylog/kb/faq/save`、`DELETE /babylog/kb/faq/{id}`。
+- **契约**：Long 全按 string；`enabled`/`favorited` 整数 1/0；null 键缺省、VO 字段全可选；动态路由 component 串须为 `babylog/kbFaq/index`，不改前端路由表。**server 侧菜单权限三处配套**（菜单 SQL 行 / 方法级 `@SaCheckPermission` / `AdminControllerPermissionContractTest` 纳入新 controller）按 K3 先例登记移交，本页不使用 `v-hasPermi`。
+- **红线**：顶部常驻「仅供参考，不构成医疗建议，异常请及时就医」；来源必填（服务端 `8465`）+ 正文限 2000 字禁整篇搬运；禁用词 0 处用于 UI。V3 付费引导 / 虚拟支付 / 线下购买移交主会话，本页零相关代码。
+- **验证**：`typecheck` 通过、`build` 通过；dev 18080 联调未跑（无库环境，如实登记）。
+- **未做**：dev 18080 联调、server 侧权限字符回填、commit / push。待龙哥综合验收。
+
